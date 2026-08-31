@@ -33,7 +33,9 @@ export default function MenuLayout({
         </nav>
 
         <section className='flex-1 text-center'>
-          <div className='text-3xl font-semibold pb-2'>{title}</div>
+          <div className='text-4xl text-blue-900 text-center font-bold'>
+            {title}
+          </div>
           <hr className='w-full -ml-8 border-gray-300' />
           <div className='pt-2'>{children}</div>
         </section>

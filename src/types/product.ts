@@ -11,7 +11,7 @@ export interface ProductRecord {
 }
 
 export interface Product {
-  id?: string;
+  id: string;
   storeId: string;
   name: string;
   description: string | null;

@@ -4,7 +4,7 @@ import { User } from '@/src/types/user';
 
 export default function Orders({ user }: { user: User }) {
   return (
-    <DefaultLayout user={user}>
+    <DefaultLayout title='Pedidos' user={user}>
       <></>
     </DefaultLayout>
   );

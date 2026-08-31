@@ -8,7 +8,7 @@ interface HeaderProps {
 
 const navLinks = [
   { label: 'Pedidos', href: '/orders' },
-  { label: 'Estoque', href: '/products' },
+  { label: 'Estoque', href: '/stock' },
   { label: 'Configurações', href: '/configs' },
 ];
 
@@ -22,6 +22,7 @@ export default function Header({ user }: HeaderProps) {
   async function handleLogout() {
     setLoggingOut(true);
     await fetch('/api/v1/sessions', { method: 'DELETE' });
+
     window.location.href = '/login';
   }
 
@@ -36,10 +37,11 @@ export default function Header({ user }: HeaderProps) {
             fill='none'
           >
             <path
-              d='M4 12c2-4 6-4 8 0s6 4 8 0'
+              d='M3 11l9-8 9 8M5 10v10h14V10M9 21v-6h6v6'
               stroke='currentColor'
-              strokeWidth='2.5'
+              strokeWidth='2'
               strokeLinecap='round'
+              strokeLinejoin='round'
             />
           </svg>
           <span className='text-lg font-bold text-white'>Vorks</span>

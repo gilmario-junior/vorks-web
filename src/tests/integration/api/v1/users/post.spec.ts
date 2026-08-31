@@ -34,7 +34,16 @@ describe('POST /api/v1/users', () => {
         storeId: store.id,
         email: 'store@example.com',
         password: responseBody.password,
-        features: ['create:session', 'read:session', 'update:user'],
+        features: [
+          'create:session',
+          'read:session',
+          'update:user',
+          'read:store',
+          'create:product',
+          'read:product',
+          'update:product',
+          'delete:product',
+        ],
         createdAt: responseBody.createdAt,
         updatedAt: responseBody.updatedAt,
       });

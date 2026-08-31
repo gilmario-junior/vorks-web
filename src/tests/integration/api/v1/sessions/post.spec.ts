@@ -29,13 +29,27 @@ describe('POST /api/v1/sessions', () => {
 
       expect(responseBody).toMatchObject({
         userId: user.id,
-        features: ['create:session', 'read:session', 'update:user'],
+        features: [
+          'create:session',
+          'read:session',
+          'update:user',
+          'read:store',
+          'create:product',
+          'read:product',
+          'update:product',
+          'delete:product',
+        ],
       });
 
       expect(responseBody.features).toEqual([
         'create:session',
         'read:session',
         'update:user',
+        'read:store',
+        'create:product',
+        'read:product',
+        'update:product',
+        'delete:product',
       ]);
       expect(responseBody.id).toBeTypeOf('string');
       expect(responseBody.token).toBeTypeOf('string');

@@ -18,6 +18,8 @@ export default function ConfigUsers({ user }: { user: User }) {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalStoreOpen, setModalStoreOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [idUserEditing, setIdUserEditing] = useState('');
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -50,10 +52,23 @@ export default function ConfigUsers({ user }: { user: User }) {
     setStoreName('');
     setPassword('');
     setError(null);
+    setIsEditing(false);
   }
 
-  function handleOpenModal() {
+  function handleOpenModalCreateUser() {
     resetForm();
+    setModalOpen(true);
+  }
+
+  async function handleOpenModalEdituser(user: User) {
+    resetForm();
+    setIsEditing(true);
+    setEmail(user.email);
+    setFullName(user.fullName);
+    const response = await fetch(`/api/v1/stores/${user.storeId}`);
+    const store = await response.json();
+    setStoreName(store.storeName);
+    setIdUserEditing(String(user.id));
     setModalOpen(true);
   }
 
@@ -76,11 +91,20 @@ export default function ConfigUsers({ user }: { user: User }) {
     setError(null);
     setLoading(true);
 
+    const url = isEditing ? `/api/v1/users/${idUserEditing}` : '/api/v1/users';
+    const method = isEditing ? 'PATCH' : 'POST';
+    const bodyScreen = {
+      ...(fullName && { fullName }),
+      ...(email && { email }),
+      ...(storeId && { storeId }),
+      ...(password && { password }),
+    };
+
     try {
-      const response = await fetch('/api/v1/users', {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName, email, storeId, password }),
+        body: JSON.stringify(bodyScreen),
       });
 
       const body = await response.json();
@@ -89,9 +113,9 @@ export default function ConfigUsers({ user }: { user: User }) {
         setError(body as ApiError);
         return;
       }
-
       setModalOpen(false);
-      await fetchUsers();
+      resetForm();
+      await setUsers(body);
     } catch {
       setError({
         name: 'NetworkError',
@@ -106,51 +130,50 @@ export default function ConfigUsers({ user }: { user: User }) {
 
   return (
     <MenuLayout title='Usuários' user={user}>
+      <div className='flex items-center justify-between mb-5'>
+        <h1 className='text-xl font-semibold text-gray-900'>Buscar Usuários</h1>
+        <Button
+          buttonText='Criar Usuário'
+          onClick={() => handleOpenModalCreateUser()}
+          type='button'
+        />
+      </div>
       <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-6'>
+        <input
+          type='text'
+          placeholder='Buscar usuário...'
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className='w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+        />
+
+        <label className='flex items-center text-sm text-gray-700'>
           <input
-            type='text'
-            placeholder='Buscar usuário...'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className='w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+            type='radio'
+            name='searchBy'
+            value='fullName'
+            checked={searchBy === 'fullName'}
+            onChange={() => setSearchBy('fullName')}
           />
+          Por Nome
+        </label>
 
-          <label className='flex items-center gap-1 text-sm text-gray-700'>
-            <input
-              type='radio'
-              name='searchBy'
-              value='fullName'
-              checked={searchBy === 'fullName'}
-              onChange={() => setSearchBy('fullName')}
-            />
-            Por Nome
-          </label>
-
-          <label className='flex items-center gap-1 text-sm text-gray-700'>
-            <input
-              type='radio'
-              name='searchBy'
-              value='email'
-              checked={searchBy === 'email'}
-              onChange={() => setSearchBy('email')}
-            />
-            Por Email
-          </label>
-
-          <Button
-            type='button'
-            buttonText='Buscar'
-            variant='primary'
-            onClick={fetchUsers}
+        <label className='flex items-center gap-1 text-sm text-gray-700'>
+          <input
+            type='radio'
+            name='searchBy'
+            value='email'
+            checked={searchBy === 'email'}
+            onChange={() => setSearchBy('email')}
           />
-        </div>
+          Por Email
+        </label>
 
         <Button
-          buttonText='Criar usuário'
-          onClick={handleOpenModal}
           type='button'
-          variant='check'
+          buttonText='Buscar'
+          variant='search'
+          onClick={fetchUsers}
         />
       </div>
       <div className='overflow-hidden rounded-lg border border-gray-200'>
@@ -163,6 +186,8 @@ export default function ConfigUsers({ user }: { user: User }) {
               <th className='px-4 py-3 text-sm font-medium text-gray-700'>
                 Email
               </th>
+              <th></th>
+              <th></th>
             </tr>
           </thead>
           <tbody className='divide-y divide-gray-200'>
@@ -172,6 +197,16 @@ export default function ConfigUsers({ user }: { user: User }) {
                   {u.fullName}
                 </td>
                 <td className='px-4 py-3 text-sm text-gray-500'>{u.email}</td>
+                <td className='px-4 py-3 text-sm text-gray-500'>
+                  <Button
+                    buttonText='Editar'
+                    variant='linkPrimary'
+                    onClick={() => handleOpenModalEdituser(u)}
+                  />
+                </td>
+                <td className='px-4 py-3 text-sm text-gray-500'>
+                  <Button buttonText='Excluir' variant='linkDanger' />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -181,7 +216,7 @@ export default function ConfigUsers({ user }: { user: User }) {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title='Cadastrar novo usuário'
+        title={isEditing ? 'Editando Usuário ' : 'Cadastrar novo usuário'}
       >
         <form onSubmit={handleSubmit}>
           {error && (
@@ -210,19 +245,23 @@ export default function ConfigUsers({ user }: { user: User }) {
             <label className='mb-1 block text-sm font-medium text-gray-700'>
               Loja
             </label>
-            <input
-              type='text'
-              disabled={storeLocked}
-              required
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
-              className='w-4/6 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-            />
-            <Button
-              buttonText='Buscar'
-              variant='ghost'
-              onClick={handleModalStoreOpen}
-            />
+            <div className='flex justify-between'>
+              <input
+                type='text'
+                disabled
+                required
+                value={storeName}
+                onChange={(e) => setStoreName(e.target.value)}
+                className={`${isEditing ? 'w-full' : 'w-2/3'} rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+              />
+              <Button
+                className={isEditing ? 'hidden' : ''}
+                buttonText='Buscar'
+                variant='search'
+                onClick={handleModalStoreOpen}
+              />
+            </div>
+
             <Modal
               open={modalStoreOpen}
               onClose={() => setModalStoreOpen(false)}
@@ -239,7 +278,7 @@ export default function ConfigUsers({ user }: { user: User }) {
 
                       <Button
                         buttonText='Selecionar'
-                        variant='check'
+                        variant='search'
                         onClick={() =>
                           handleSelectStore(store.storeName, store.id!)
                         }
@@ -264,12 +303,16 @@ export default function ConfigUsers({ user }: { user: User }) {
           </div>
 
           <div className='mb-6'>
-            <label className='mb-1 block text-sm font-medium text-gray-700'>
+            <label
+              className='mb-1 block text-sm font-medium text-gray-700'
+              hidden={isEditing}
+            >
               Senha
             </label>
             <input
               type='password'
-              required
+              required={!isEditing}
+              hidden={isEditing}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
@@ -278,7 +321,7 @@ export default function ConfigUsers({ user }: { user: User }) {
 
           <Button
             type='submit'
-            buttonText='Criar usuário'
+            buttonText={isEditing ? 'Editar Usuário' : 'Criar usuário'}
             loading={loading}
             loadingText='Criando...'
           />

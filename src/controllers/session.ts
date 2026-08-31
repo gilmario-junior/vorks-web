@@ -18,10 +18,8 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
   res.status(201).json(secureValues);
 }
 
-async function getHandler() {}
-
-const user = {
+const session = {
   postHandler,
 };
 
-export default user;
+export default session;
