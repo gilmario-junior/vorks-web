@@ -1,11 +1,11 @@
 import userModel from '@/src/models/user';
-import { ValidationError } from '../infra/errors';
+import { NotFoundError, ValidationError } from '../infra/errors';
 import password from './password';
 import { FEATURES } from '@/src/constants/features';
 import { User } from '@/src/types/user';
 
 async function create(user: any) {
-  await Promise.all([validateEmail(user.email)]);
+  await validateEmail(user.email);
   await hashPassword(user.password);
   await injectDefaultFeatures();
   const createdUser = await userModel.create(user);
@@ -66,10 +66,24 @@ async function getUserByQuery(
   return usersFounded;
 }
 
+async function updateUserById(id: string, params: User) {
+  const existingUser = await userModel.findOneById(id);
+  if (!existingUser)
+    throw new NotFoundError({
+      message: 'Usuário não encontrado',
+      action: 'Informe um usuário válido',
+    });
+  if (params.email !== existingUser.email)
+    await validateEmail(existingUser.email);
+  const foundedUser = await userModel.updateUserById(id, params);
+  return foundedUser;
+}
+
 const user = {
   create,
   getUserById,
   getUserByQuery,
+  updateUserById,
 };
 
 export default user;

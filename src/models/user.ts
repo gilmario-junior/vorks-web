@@ -102,6 +102,46 @@ async function updateFeatures(userId: string, features: string[]) {
   return result.rows[0];
 }
 
+// models/user.ts
+async function updateUserById(id: string, changes: User) {
+  const fields: string[] = [];
+  const values: unknown[] = [];
+  let index = 1;
+
+  if (changes.fullName !== undefined) {
+    fields.push(`full_name = $${index++}`);
+    values.push(changes.fullName);
+  }
+  if (changes.email !== undefined) {
+    fields.push(`email = $${index++}`);
+    values.push(changes.email);
+  }
+  if (changes.storeId !== undefined) {
+    fields.push(`store_id = $${index++}`);
+    values.push(changes.storeId);
+  }
+  if (changes.password !== undefined) {
+    fields.push(`password = $${index++}`);
+    values.push(changes.password);
+  }
+
+  fields.push('updated_at = now()');
+
+  if (fields.length === 1) {
+    const current = await findOneById(id);
+    return current;
+  }
+
+  values.push(id);
+
+  const result = await database.query({
+    text: `UPDATE users SET ${fields.join(', ')} WHERE id = $${index} RETURNING *`,
+    values,
+  });
+
+  return result.rows[0] ? mappingUser(result.rows[0]) : undefined;
+}
+
 const user = {
   create,
   find,
@@ -109,6 +149,7 @@ const user = {
   findByStoreName,
   findOneById,
   updateFeatures,
+  updateUserById,
 };
 
 export default user;

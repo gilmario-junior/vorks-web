@@ -21,9 +21,17 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   res.status(200).json(usersFounded);
 }
 
+async function patchHandler(req: NextApiRequest, res: NextApiResponse) {
+  const { id } = req.query;
+  const response = await userService.updateUserById(String(id), req.body);
+
+  return res.status(200).json(response);
+}
+
 const user = {
   postHandler,
   getHandler,
+  patchHandler,
 };
 
 export default user;

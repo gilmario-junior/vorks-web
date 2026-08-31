@@ -18,8 +18,8 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
 
 async function getByIdHandler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
-  const store = storeService.getStoreById(id as string);
-  return store;
+  const store = await storeService.getStoreById(id as string);
+  return res.status(200).json(store);
 }
 
 const store = {
